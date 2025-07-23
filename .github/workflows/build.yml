@@ -20,11 +20,9 @@ jobs:
         submodules: recursive
     
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgGitCommitId: 'HEAD'
-        vcpkgJsonGlob: '**/vcpkg.json'
+      run: |
+        git submodule update --init vcpkg
+        .\vcpkg\bootstrap-vcpkg.bat
     
     - name: Install dependencies
       run: |
@@ -57,11 +55,9 @@ jobs:
         submodules: recursive
     
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgGitCommitId: 'HEAD'
-        vcpkgJsonGlob: '**/vcpkg.json'
+      run: |
+        git submodule update --init vcpkg
+        .\vcpkg\bootstrap-vcpkg.bat
     
     - name: Install dependencies
       run: |
@@ -91,11 +87,9 @@ jobs:
         sudo apt-get install -y ninja-build g++ pkg-config
     
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgGitCommitId: 'HEAD'
-        vcpkgJsonGlob: '**/vcpkg.json'
+      run: |
+        git submodule update --init vcpkg
+        ./vcpkg/bootstrap-vcpkg.sh
     
     - name: Install dependencies
       run: |
@@ -128,11 +122,9 @@ jobs:
         sudo apt-get install -y ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu pkg-config
     
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgGitCommitId: 'HEAD'
-        vcpkgJsonGlob: '**/vcpkg.json'
+      run: |
+        git submodule update --init vcpkg
+        ./vcpkg/bootstrap-vcpkg.sh
     
     - name: Install dependencies
       run: |
@@ -158,9 +150,13 @@ jobs:
     
     - name: Setup Android NDK
       uses: nttld/setup-ndk@v1
+      id: setup-ndk
       with:
         ndk-version: r25c
         add-to-path: false
+    
+    - name: Set NDK environment
+      run: echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
     
     - name: Install system dependencies
       run: |
@@ -168,11 +164,9 @@ jobs:
         sudo apt-get install -y ninja-build pkg-config
     
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgGitCommitId: 'HEAD'
-        vcpkgJsonGlob: '**/vcpkg.json'
+      run: |
+        git submodule update --init vcpkg
+        ./vcpkg/bootstrap-vcpkg.sh
     
     - name: Install dependencies
       run: |
@@ -182,7 +176,7 @@ jobs:
       run: |
         cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake -DANDROID_ABI=x86_64 -DANDROID_PLATFORM=android-21 -DCPPREST_EXCLUDE_BROTLI=ON -DBUILD_TESTS=OFF -DBUILD_SAMPLES=OFF
       env:
-        ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_ROOT }}
     
     - name: Build
       run: cmake --build build
@@ -199,9 +193,13 @@ jobs:
     
     - name: Setup Android NDK
       uses: nttld/setup-ndk@v1
+      id: setup-ndk
       with:
         ndk-version: r25c
         add-to-path: false
+    
+    - name: Set NDK environment
+      run: echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
     
     - name: Install system dependencies
       run: |
@@ -209,11 +207,9 @@ jobs:
         sudo apt-get install -y ninja-build pkg-config
     
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgGitCommitId: 'HEAD'
-        vcpkgJsonGlob: '**/vcpkg.json'
+      run: |
+        git submodule update --init vcpkg
+        ./vcpkg/bootstrap-vcpkg.sh
     
     - name: Install dependencies
       run: |
@@ -223,7 +219,7 @@ jobs:
       run: |
         cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-21 -DCPPREST_EXCLUDE_BROTLI=ON -DBUILD_TESTS=OFF -DBUILD_SAMPLES=OFF
       env:
-        ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_ROOT }}
     
     - name: Build
       run: cmake --build build

@@ -56,11 +56,15 @@ jobs:
         sudo apt-get install -y ninja-build pkg-config
     
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgGitCommitId: 'HEAD'
-        vcpkgJsonGlob: '**/vcpkg.json'
+      run: |
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          git submodule update --init vcpkg
+          .\vcpkg\bootstrap-vcpkg.bat
+        else
+          git submodule update --init vcpkg
+          ./vcpkg/bootstrap-vcpkg.sh
+        fi
+      shell: bash
     
     - name: Install dependencies (Windows)
       if: matrix.os == 'windows-latest'
@@ -139,9 +143,13 @@ jobs:
     
     - name: Setup Android NDK
       uses: nttld/setup-ndk@v1
+      id: setup-ndk
       with:
         ndk-version: r25c
         add-to-path: false
+    
+    - name: Set NDK environment
+      run: echo "ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}" >> $GITHUB_ENV
     
     - name: Install system dependencies
       run: |
@@ -149,11 +157,9 @@ jobs:
         sudo apt-get install -y ninja-build pkg-config
     
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        vcpkgGitCommitId: 'HEAD'
-        vcpkgJsonGlob: '**/vcpkg.json'
+      run: |
+        git submodule update --init vcpkg
+        ./vcpkg/bootstrap-vcpkg.sh
     
     - name: Install dependencies
       run: |
@@ -163,7 +169,7 @@ jobs:
       run: |
         cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake -DANDROID_ABI=${{ matrix.abi }} -DANDROID_PLATFORM=android-21 -DCPPREST_EXCLUDE_BROTLI=ON -DBUILD_TESTS=OFF -DBUILD_SAMPLES=OFF -DCMAKE_INSTALL_PREFIX=install
       env:
-        ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_ROOT }}
     
     - name: Build
       run: cmake --build build
